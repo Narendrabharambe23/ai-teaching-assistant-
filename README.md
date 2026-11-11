@@ -1,208 +1,206 @@
-# 🎓 AI Teaching Assistant — RAG-Powered
+<div align="center">
 
-A **100% local, cost-free AI Teaching Assistant** that answers questions from your uploaded course materials using Retrieval-Augmented Generation (RAG).
+# 🎓 AI Teaching Assistant — Local RAG Knowledge Engine
 
-Built with **LangChain · ChromaDB · Ollama · FastAPI · Streamlit**.
+### *Transform your textbooks, lecture slides, and notes into an interactive private AI tutor.*
 
----
+[![Python](https://img.shields.io/badge/Python-3.10%20%7C%203.11%20%7C%203.12%20%7C%203.13-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
+[![Streamlit](https://img.shields.io/badge/Streamlit-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white)](https://streamlit.io/)
+[![LangChain](https://img.shields.io/badge/LangChain-1C3C3C?style=for-the-badge&logo=langchain&logoColor=white)](https://www.langchain.com/)
+[![ChromaDB](https://img.shields.io/badge/ChromaDB-Vector_Store-FF6F61?style=for-the-badge)](https://www.trychroma.com/)
+[![Ollama](https://img.shields.io/badge/Ollama-100%25%20Local-black?style=for-the-badge&logo=ollama&logoColor=white)](https://ollama.ai/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
 
-## 🏗️ Architecture
+<br/>
 
-```
-Streamlit UI (Chat + Upload)
-        ↕  HTTP
-FastAPI Backend
-    ├── Document Ingestion  →  ChromaDB (Vector DB)
-    └── RAG Query  →  ChromaDB + Ollama (LLM)
-```
+<img src="docs/assets/demo_ui.jpg" alt="AI Teaching Assistant UI Preview" width="850" style="border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,0.3);"/>
 
----
+<br/>
 
-## 📋 Prerequisites
+[Key Highlights](#-key-highlights) •
+[System Architecture](#-system-architecture) •
+[Quickstart](#-quickstart) •
+[Developer Profile](#-about-the-developer) •
+[API Reference](#-api-documentation)
 
-### 1. Python 3.10+
-```bash
-python --version   # Should be 3.10 or higher
-```
-
-### 2. Ollama (Local AI Models)
-Download and install from: **https://ollama.com**
-
-After install, pull the required models:
-```bash
-# Pull the LLM (choose based on your RAM)
-ollama pull llama3.2        # Recommended for 8GB RAM  (~2GB download)
-ollama pull llama3.1        # Better answers, needs 16GB RAM  (~4.7GB)
-ollama pull mistral         # Best for teaching, needs 16GB RAM  (~4.1GB)
-
-# Pull the embedding model (REQUIRED — always)
-ollama pull nomic-embed-text
-```
-
-Check that Ollama is running:
-```bash
-ollama serve      # Start Ollama server
-ollama list       # Should show your pulled models
-```
+</div>
 
 ---
 
-## 🚀 Setup & Installation
+## 🌟 Key Highlights
 
-### Step 1 — Clone / navigate to project
-```bash
-cd ai-teaching-assistant
+- 🔒 **100% Private & Local:** Zero cloud dependency, zero external API keys, zero token fees. All documents, embeddings, and inference stay on your device.
+- 🎯 **Grounded, Anti-Hallucination Answers:** Low temperature decoding (`0.1`) combined with a strict pedagogical system prompt ensures the assistant only answers from your materials.
+- 📚 **Multi-Format Document Parsing:** Seamlessly parses text and metadata from PDF (`PyMuPDF`) and Word documents (`python-docx`).
+- 🔎 **Maximal Marginal Relevance (MMR):** Avoids redundant chunks by selecting diverse, high-novelty context snippets (`fetch_k=15, k=4`).
+- 📎 **Verifiable Source Citations:** Every answer references the source document name and exact page numbers.
+- 🎨 **Modern Glassmorphic Dark UI:** Streamlit interface styled with custom CSS, real-time health diagnostics, and document manager.
+
+---
+
+## 🏗️ System Architecture
+
+```mermaid
+flowchart TD
+    User([👤 Student / User])
+
+    subgraph Frontend ["Presentation Tier (Streamlit :8501)"]
+        UI["🖥️ Streamlit Web App\n• Document Upload\n• Chat Window\n• Verified Source Drawers"]
+    end
+
+    subgraph Backend ["Application Gateway (FastAPI :8000)"]
+        API["⚙️ FastAPI REST Server\n• File Validation & Ingestion Pipeline\n• MMR Retrieval Engine\n• Anti-Hallucination LCEL Chain"]
+    end
+
+    subgraph Database ["Vector Database"]
+        Chroma[("📚 ChromaDB (Local)\n• 768-dim Vectors\n• SQLite Metadata & HNSW Index")]
+    end
+
+    subgraph LocalAI ["Local Inference (Ollama :11434)"]
+        Ollama["🤖 Ollama Engine\n• nomic-embed-text (Bi-Encoder)\n• llama3.2:3b (Quantized LLM)"]
+    end
+
+    User -->|1. Uploads PDF/DOCX or asks question| UI
+    UI -->|2. HTTP REST Request| API
+    API <-->|3. Chunks & Vector Search| Chroma
+    API <-->|4. Embeddings & Answer Generation| Ollama
+    API -->|5. Returns Answer + Page Citations| UI
+    UI -->|6. Renders Response & Citations| User
 ```
 
-### Step 2 — Create a virtual environment
+---
+
+## 🛠️ Tech Stack & Components
+
+| Component | Technology | Description |
+|---|---|---|
+| **Presentation** | [Streamlit](https://streamlit.io/) | Interactive dark-mode frontend with chat session state and citation cards |
+| **Backend API** | [FastAPI](https://fastapi.tiangolo.com/) + [Uvicorn](https://www.uvicorn.org/) | High-performance asynchronous REST API gateway with OpenAPI documentation |
+| **Orchestration** | [LangChain](https://www.langchain.com/) (>= 0.3) | LCEL chain composition, prompt templates, and retriever bindings |
+| **Vector Database** | [ChromaDB](https://www.trychroma.com/) (>= 0.5) | Local persistent vector store (SQLite metadata + HNSW vector index) |
+| **Document Parsers** | [PyMuPDF](https://pymupdf.readthedocs.io/) & [Docx2txt](https://pypi.org/project/docx2txt/) | High-speed PDF page-by-page extraction & Word document parser |
+| **Embedding Model** | `nomic-embed-text` (via Ollama) | 768-dimensional normalized dense semantic representations |
+| **Language Model** | `llama3.2:3b` (via Ollama) | Meta's 4-bit quantized instruction-tuned LLM running locally |
+
+---
+
+## 🚀 Quickstart
+
+### Prerequisites
+1. **Python 3.10+** installed
+2. **Ollama** installed from [ollama.ai](https://ollama.ai)
+
+### 1. Clone & Set Up Environment
 ```bash
+git clone https://github.com/Narendrabharambe23/ai-teaching-assistant-.git
+cd ai-teaching-assistant-
+
+# Create virtual environment
 python -m venv .venv
-
-# Windows
+# Windows:
 .venv\Scripts\activate
-
-# Mac/Linux
+# Mac/Linux:
 source .venv/bin/activate
-```
 
-### Step 3 — Install dependencies
-```bash
+# Install dependencies
 pip install -r requirements.txt
 ```
 
-### Step 4 — Configure settings (optional)
-The `.env` file is pre-configured with defaults. Edit it if you want to:
-- Change the default model
-- Use a different Ollama URL
-- Adjust chunk size
-
-```env
-LLM_MODEL=llama3.2          # Change to mistral or llama3.1
-EMBED_MODEL=nomic-embed-text
-OLLAMA_BASE_URL=http://localhost:11434
+### 2. Pull Local AI Models
+```bash
+ollama pull nomic-embed-text
+ollama pull llama3.2
 ```
 
----
+### 3. Launch Services
 
-## ▶️ Running the Application
-
-You need **3 terminals** running simultaneously:
-
-### Terminal 1 — Start Ollama
+**Terminal 1 — Ollama Daemon (if not running in system tray):**
 ```bash
 ollama serve
 ```
 
-### Terminal 2 — Start FastAPI Backend
+**Terminal 2 — FastAPI Backend:**
 ```bash
-# From the ai-teaching-assistant/ directory
-uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000
+uvicorn backend.main:app --reload --host 127.0.0.1 --port 8000
 ```
-✅ Backend runs at: http://localhost:8000
-📚 API Docs at: http://localhost:8000/docs
+*API Swagger Docs:* `http://127.0.0.1:8000/docs`
 
-### Terminal 3 — Start Streamlit Frontend
+**Terminal 3 — Streamlit Frontend:**
 ```bash
-# From the ai-teaching-assistant/ directory
 streamlit run frontend/streamlit_app.py
 ```
-✅ Frontend runs at: http://localhost:8501
+*Web Application:* `http://localhost:8501`
 
 ---
 
-## 📖 How to Use
-
-1. **Upload documents** — Click "Upload Documents" in the sidebar → select a PDF or DOCX
-2. **Wait for ingestion** — The app will chunk and embed your document (takes 10–30 seconds)
-3. **Ask questions** — Type your question in the chat box and press Enter
-4. **View sources** — Click "📎 N source(s) used" to see which parts of your document were cited
-5. **Switch models** — Use the model dropdown in the sidebar to switch Ollama models
-
----
-
-## 📁 Project Structure
+## 📖 How It Works (Step-by-Step)
 
 ```
+[Upload Document] ➔ PyMuPDF Extract ➔ 800-char Chunks (150 Overlap) ➔ nomic-embed-text ➔ ChromaDB
+[Ask Question]    ➔ Embed Query ➔ MMR Vector Search (Top 4) ➔ Strict Prompt ➔ Llama 3.2 ➔ Answer + Page Citations
+```
+
+1. **Ingestion:** Upload a PDF or DOCX file. The system validates text density (rejects empty or scanned image PDFs), splits it into 800-character semantic chunks with 150-character overlap, generates 768-dim embeddings, and persists them into ChromaDB.
+2. **Retrieval:** When a question is submitted, ChromaDB runs **Maximal Marginal Relevance (MMR)** (`fetch_k=15, k=4`), selecting the 4 most informative, non-redundant passages.
+3. **Generation:** Llama 3.2 generates an answer strictly based on the retrieved context, citing exact source files and page numbers.
+
+---
+
+## 📁 Repository Structure
+
+```text
 ai-teaching-assistant/
-├── .env                    ← Configuration (edit model names here)
-├── requirements.txt        ← Python dependencies
-│
 ├── backend/
-│   ├── main.py            ← FastAPI app entry point
-│   ├── core/config.py     ← Settings (reads from .env)
-│   ├── models/schemas.py  ← Pydantic request/response models
-│   ├── api/v1/            ← REST API routes
-│   │   └── endpoints/
-│   │       ├── documents.py  ← Upload, list, clear
-│   │       └── chat.py       ← RAG Q&A
-│   └── services/
-│       ├── ingestion_service.py  ← Load → Chunk → Embed → Store
-│       └── llm_service.py        ← Retrieve → Prompt → Generate
-│
+│   ├── api/v1/endpoints/        # REST API endpoints (chat, documents)
+│   ├── core/config.py           # Pydantic BaseSettings singleton
+│   ├── models/schemas.py        # Request & Response Pydantic DTOs
+│   ├── services/
+│   │   ├── ingestion_service.py # PDF/Word loading, chunking & ChromaDB storage
+│   │   └── llm_service.py       # MMR retrieval, strict teaching prompt & LCEL chain
+│   └── main.py                  # FastAPI application entry point & CORS
 ├── frontend/
-│   ├── streamlit_app.py   ← Main Streamlit UI
-│   └── components/
-│       ├── sidebar.py        ← File upload, model selector
-│       └── chat_interface.py ← Chat UI, source citations
-│
-└── data/
-    ├── raw_documents/     ← Uploaded files stored here
-    └── vector_db/         ← ChromaDB persists here (backup this!)
+│   ├── components/
+│   │   ├── chat_interface.py    # Chat bubbles, input box & expandable source citations
+│   │   └── sidebar.py           # File uploader, model switch & health diagnostics
+│   └── streamlit_app.py         # Streamlit main UI entry & glassmorphic CSS
+├── docs/assets/                 # Architecture & UI preview graphics
+├── data/                        # Persistent local data (raw documents & vector db)
+├── requirements.txt             # Project dependencies
+└── README.md                    # Project documentation
 ```
 
 ---
 
-## 🔧 API Reference
+## 📡 API Documentation
 
 | Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/health` | Check Ollama, ChromaDB status |
-| `POST` | `/api/v1/documents/upload` | Upload & ingest a PDF/DOCX |
-| `GET` | `/api/v1/documents/` | List all uploaded documents |
-| `DELETE` | `/api/v1/documents/clear` | Clear all documents & vector store |
-| `POST` | `/api/v1/chat/` | Ask a question (RAG query) |
-
-Full interactive docs: **http://localhost:8000/docs**
+|---|---|---|
+| `GET` | `/health` | System diagnostics (Ollama connectivity, collection chunk count) |
+| `POST` | `/api/v1/documents/upload` | Upload and ingest a PDF/DOCX file (<50MB) |
+| `GET` | `/api/v1/documents/` | List all ingested documents with metadata & timestamps |
+| `DELETE` | `/api/v1/documents/clear` | Purge entire vector database and delete uploaded files |
+| `POST` | `/api/v1/chat/` | Submit a student question; returns grounded answer & citations |
 
 ---
 
-## ❓ Troubleshooting
+## 👨‍💻 About the Developer
 
-| Problem | Fix |
-|---------|-----|
-| "Cannot connect to Ollama" | Run `ollama serve` in a terminal |
-| "No model named llama3.2" | Run `ollama pull llama3.2` |
-| "Empty or scanned PDF" | Use a text-based PDF, not image scans |
-| Response is very slow | Switch to `llama3.2` (smaller model) |
-| Irrelevant answers | Upload more specific course materials |
-| Import errors | Make sure you ran `pip install -r requirements.txt` |
-| ChromaDB version error | Run `pip install "chromadb>=0.5.0" "langchain-chroma>=0.1.0"` |
+<div align="center">
 
----
+### **Narendra Bharambe**
+*AI & Software Engineer | Data Science & Generative AI Enthusiast*
 
-## 📦 Tech Stack
+[![GitHub](https://img.shields.io/badge/GitHub-Narendrabharambe23-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/Narendrabharambe23)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white)](https://www.linkedin.com)
+[![Portfolio](https://img.shields.io/badge/Portfolio-Visit-7C3AED?style=for-the-badge&logo=react&logoColor=white)](https://github.com/Narendrabharambe23)
 
-| Component | Technology |
-|-----------|------------|
-| LLM | Ollama (llama3.2 / mistral / llama3.1) |
-| Embeddings | nomic-embed-text via Ollama |
-| Vector DB | ChromaDB ≥ 0.5 (persistent local) |
-| RAG Framework | LangChain ≥ 0.3 (modular packages) |
-| Backend | FastAPI + uvicorn |
-| Frontend | Streamlit ≥ 1.39 |
-| PDF Parser | PyMuPDF (pymupdf) |
-| DOCX Parser | Docx2txt / python-docx |
+*Building private, high-performance AI systems that empower learning and solve real-world problems.*
+
+</div>
 
 ---
 
-## 🌟 Features
-
-- ✅ 100% local — no API keys, no costs
-- ✅ PDF and Word document support
-- ✅ Source citations with page numbers
-- ✅ MMR retrieval (no redundant context)
-- ✅ Model selector (switch LLMs in UI)
-- ✅ Persistent vector store (survives restarts)
-- ✅ Beautiful dark theme chat UI
-- ✅ System health monitoring
-- ✅ Grounded answers (won't hallucinate)
+<div align="center">
+⭐ If you find this project helpful, please consider starring this repository!
+</div>
